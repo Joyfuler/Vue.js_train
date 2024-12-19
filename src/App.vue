@@ -1,72 +1,104 @@
 <template>
   <div>
-    <h1 :class = "colorName">
-      <!-- h1의 클래스가 변화에 연동되도록 v-bind를 걸었음. 아래 변경될 시 반응한다-->
-      {{ name2.name }} Hello, World
-    </h1>  
-    <h2>
-      {{fnc(name2.name)}}
-    </h2>
-    <button class = "btn btn-primary" 
-      @click="clickEvent"
-    >버튼입니다 </button>
-    <button class = "btn btn-primary"
-      @click="typeShift"
-    >타입변경해보기</button>
-    <!-- vue에서는 v-on: 태그를 사용하여 이벤트 처리-->
+  <div v-show="toggle">true</div>
+  <div v-show="!toggle">false</div>
+
+  <div v-if="toggle">
+    ttrue
   </div>  
-  <div>
-    <br>
-    <input v-bind:type="name2.type" v-model="name2.name">
-  <!-- v-model을 사용하여 간단하게 양방향 reactive 기능 구현이 가능. input 값이 변경되면 h1이 변경, h1이 변경되면 input값이 변경된다-->
+  <div v-else>
+    ffalse
   </div>  
 
-
+  <div class = "container">
+    <h2>Todo List</h2>
+    <form class = "d-flex" @submit.prevent="onSubmit()">            
+      <!-- 기존 form 이벤트를 방지하고 onSubmit을 실행함 -->
+      <div class = "flex-grow-1">      
+        <input class = "form-control" type = "text"
+      v-model="todo">
+        <div v-show="hasError" style = "color: red;">
+          cannot be empty
+        </div>
+      <button class = "btn btn-primary m-1" type = "submit"
+        @click="clickEvent"
+      >버튼입니다 </button>    
+      <div class = "card mt-2" v-if="todos.length == 0">
+        <div class = "card-body">
+          내용이 없습니다.
+        </div>
+      </div>
+        <div class = "card mt-2" v-for = "(todo, index) in todos" :key="todo.id" v-show="!isDelete">
+          <div class = "card-body d-flex">
+            <!-- d-flex를 사용하여 그리드화. 줄바꾸기 대신 옆으로 정렬된다 -->            
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" @change="changeStatus" v-model="todo.completed">
+            <label class="form-check-label flex-grow-1" for="flexCheckDefault" :class="{
+              done: todo.completed}">              
+            {{todo.subject}}
+            </label>
+            <div>
+              <button class = "btn btn-danger btn-sm m-1" type = "button"
+                @click="deleteThis(index)">삭제 
+              </button>    
+            </div>  
+          </div>        
+        </div>                            
+      </div>      
+    </form>    
+  </div>  
+  </div>
 </template>
 
 <script>
-  import { ref, reactive } from 'vue'
+  import { ref } from 'vue'
   // reactive : object / 배열에 사용. json등
   
   export default {
-    setup(){
-      let name = ref("Joyfuler")
-      let name2 = reactive({
-        id : 1,
-        name : "Joyfuler",
-        type : "text"
-      })
+    setup(){      
+      let hasError = ref(false)
+      let colorName = ref('colorBlue')
+      let isDelete = ref(false)
+      let todo = ref("")
+      let todos = ref([])
+      // let todo2 = reactive({
+      //   id : 1,
+      //   name : "todo2"
+      // })
 
-      let colorName = ref("colorBlue")
+      const onSubmit = () =>{
+        if (todo.value){
+            todos.value.push({
+            id : Date.now(), // 현재시간
+            subject : todo.value,
+            completed : false
+          })
 
-      
+        hasError.value = false
+        
+        } else {
+          hasError.value = true
+          alert('값을 입력해주세요!')
+        }
+
+      }
+
+      const deleteThis = index => {
+        todos.value.splice(index, 1)
+        // 해당 인덱스에서 1개만 지움
+        console.log(index)
+
+      }
+
+
+     
       // 옵저버. 추적하다가 상태변화시알림
       // ref는 객체이므로 name대신 그 value를 가져와 출력해야 한다
 
-      const fnc = temp => {
-        return 'Hello, ' + temp 
-      }
-
-      const clickEvent = () => {
-        name.value = "newJoyfuler"
-        name2.name = "newJoyfuler"
-        //alert(name.value)
-        if (colorName.value == 'colorRed'){
-          colorName.value = 'colorBlue'
-        } else {
-          colorName.value = 'colorRed'
-        }        
-      }
-
-      const typeShift = () =>{
-        name2.type = "number"
-        name2.name = "1"
-      }
-
-
-
       return{
-        name, name2, fnc, clickEvent, colorName, typeShift
+        // 변수
+        todo, todos, hasError, colorName, isDelete, 
+        // 함수
+        onSubmit, deleteThis
       }
     }
   }
@@ -78,11 +110,16 @@
     color: red;
   }
 
-  .colorRed{
+  .notDone{
     color: red;
   }
 
-  .colorBlue{
-    color: blue;
+  .done{
+    color: gray;
+    text-decoration: aqua;
+  }
+
+  *{
+    margin:10px;
   }
 </style>
